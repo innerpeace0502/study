@@ -12,10 +12,7 @@ const DEFAULT_ITEMS = [
   "행운",
   "도전",
   "휴식",
-  "노래",
-  "춤추기",
   "선물",
-  "모험",
   "소원",
 ];
 
@@ -42,7 +39,7 @@ export default function Home() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length === 8) {
+        if (Array.isArray(parsed) && parsed.length === 5) {
           setItems(parsed);
         }
       } catch {

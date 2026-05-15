@@ -24,7 +24,7 @@ const DARK_COLORS = [
   "#a07820",
 ];
 
-const TOTAL = 8;
+const TOTAL = 5;
 const ANGLE_PER_SLICE = 360 / TOTAL;
 
 function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
