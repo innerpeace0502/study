@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>간사이 위시보드</title>
+<meta name="description" content="엄마, 오빠, 동생의 오사카·교토 여행 위시리스트">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gothic+A1:wght@400;600;800&family=Zen+Maru+Gothic:wght@700&display=swap">
+<style>
+/* 상단 '나는 누구' → 필터 → 카드 그리드(폰 2열) → 카드를 누르면 하단 시트로 상세 */
+:root{
+  --bg:#f3f1ec; --surface:#ffffff; --fg:#1e2233; --muted:#6b6f80; --line:#e2dfd7;
+  --ai:#24346b; --shu:#d9532b; --chip:#eceaf3;
+  --m1:#e0567a; --m2:#2f8f83; --m3:#6a5acd;
+  --f-display:"Do Hyeon","Gothic A1",system-ui,sans-serif;
+  --f-body:"Gothic A1",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-jp:"Zen Maru Gothic","Hiragino Maru Gothic ProN",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#14161f; --surface:#1d2030; --fg:#eceef5; --muted:#9a9eb3; --line:#2c3044;
+  --ai:#8ea3ec; --shu:#f07a53; --chip:#262a3d; color-scheme:dark }}
+
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+img{max-width:100%}
+[hidden]{display:none!important}
+.wrap{max-width:1080px;margin:0 auto;padding-block:20px 80px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+header h1{font-family:var(--f-display);font-weight:400;font-size:clamp(28px,6vw,40px);line-height:1.1;margin:0 0 4px;text-wrap:balance}
+header h1 .jp{font-family:var(--f-jp);color:var(--shu);font-size:.55em;margin-left:6px;vertical-align:middle}
+header p{margin:0;color:var(--muted)}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-top:6px}
+.status i{width:8px;height:8px;border-radius:50%;background:#aaa}
+.status.ok i{background:#2f9e5b}.status.err i{background:var(--shu)}
+
+.who{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.who .label{font-weight:600;font-size:13px;color:var(--muted)}
+.members{display:flex;flex-wrap:wrap;gap:8px}
+.member{display:flex;align-items:center;gap:6px;border:2px solid transparent;background:var(--chip);color:var(--fg);
+  border-radius:999px;padding:4px 12px 4px 4px;font:600 14px var(--f-body);cursor:pointer}
+.member[aria-pressed="true"]{border-color:var(--c);background:var(--surface)}
+button:focus-visible,.card:focus-visible{outline:3px solid var(--ai);outline-offset:2px}
+.av{width:26px;height:26px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;
+  font-size:12px;font-weight:800;flex:none;border:2px solid var(--surface)}
+
+.bar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;margin:18px 0 12px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:6px 14px;
+  font:600 13px var(--f-body);cursor:pointer}
+.tab[aria-pressed="true"]{background:var(--ai);border-color:var(--ai);color:var(--bg)}
+.count{color:var(--muted);font-size:13px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+@media (min-width:700px){.grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}}
+.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  cursor:pointer;display:flex;flex-direction:column;transition:transform .15s}
+@media (hover:hover){.card:hover{transform:translateY(-2px)}}
+.card.mine{border-color:var(--me);box-shadow:0 0 0 1px var(--me)}
+.photo{aspect-ratio:4/3;max-width:100%;display:grid;place-items:center;position:relative;color:#fff;
+  background:linear-gradient(135deg,var(--g1),var(--g2)) center/cover}
+.photo.has-img .jp{display:none}
+.photo .jp{font-family:var(--f-jp);font-size:clamp(20px,5vw,28px);text-shadow:0 1px 8px rgba(0,0,0,.25);padding:0 10px;text-align:center}
+.kind{position:absolute;top:8px;left:8px;font-size:11px;font-weight:800;background:rgba(0,0,0,.4);color:#fff;border-radius:6px;padding:2px 7px}
+.hot{position:absolute;bottom:8px;left:8px;font-size:11px;font-weight:800;background:var(--shu);color:#fff;border-radius:6px;padding:2px 7px}
+.heart{position:absolute;top:6px;right:6px;width:38px;height:38px;border-radius:50%;border:0;cursor:pointer;
+  background:rgba(255,255,255,.92);color:#b9b9c3;display:grid;place-items:center}
+.heart svg{width:20px;height:20px}
+.card.mine .heart{color:var(--me)}
+.body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.city{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.04em}
+.title{font-family:var(--f-display);font-size:19px;line-height:1.2}
+.desc{color:var(--muted);font-size:12.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pickers{margin-top:auto;padding-top:8px;display:flex;align-items:center;gap:8px;min-height:34px}
+.stack{display:flex}.stack .av{width:24px;height:24px;font-size:11px;margin-left:-6px}.stack .av:first-child{margin-left:0}
+.pickers .n{font-size:12px;color:var(--muted);font-weight:600}
+.pickers .n.zero{font-weight:400}
+.empty{color:var(--muted);grid-column:1/-1}
+
+.scrim{position:fixed;inset:0;background:rgba(10,12,20,.45);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--surface);border-radius:18px 18px 0 0;
+  max-width:560px;margin:0 auto;max-height:88%;overflow:auto;
+  padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+@media (min-width:700px){.sheet{bottom:auto;top:50%;transform:translateY(-50%);border-radius:18px;padding-bottom:18px}}
+.sheet .photo{aspect-ratio:16/9}
+.sheet .inner{padding:16px 18px 0}
+.sheet h2{font-family:var(--f-display);font-weight:400;font-size:26px;margin:2px 0 6px}
+.sheet p{margin:0 0 14px}
+.sheet h3{font-size:13px;color:var(--muted);margin:0 0 8px}
+.plist{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.prow{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:10px;background:var(--chip)}
+.prow .av{width:30px;height:30px;font-size:13px}
+.prow.off{background:transparent;color:var(--muted)}.prow.off .av{background:var(--line);color:var(--muted)}
+.prow .st{margin-left:auto;font-size:12px;font-weight:600}
+.actions{display:flex;gap:8px}
+.btn{flex:1;border:0;border-radius:12px;padding:12px;font:800 15px var(--f-body);cursor:pointer}
+.btn.primary{background:var(--me,var(--ai));color:#fff}
+.btn.ghost{background:var(--chip);color:var(--fg);flex:0 0 auto;padding:12px 18px}
+.close{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(0,0,0,.4);color:#fff;font-size:18px;cursor:pointer}
+.ask{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.ask .member{font-size:17px;padding:8px 16px 8px 8px}
+.ask .av{width:36px;height:36px;font-size:15px}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:30;
+  background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>오사카·교토 위시보드<span class="jp">行きたい！</span></h1>
+    <p>가고 싶은 곳, 먹고 싶은 것에 하트를 눌러 주세요. 카드를 누르면 누가 골랐는지 보여요.</p>
+    <span class="status" id="status"><i></i><span>불러오는 중…</span></span>
+  </header>
+
+  <section class="who" aria-label="나는 누구?">
+    <span class="label">나는</span>
+    <div class="members" id="members"></div>
+  </section>
+
+  <div class="bar">
+    <div class="tabs" id="kindTabs"></div>
+    <div class="tabs" id="cityTabs"></div>
+  </div>
+  <div class="bar" style="margin-top:0">
+    <span class="count" id="count"></span>
+    <div class="tabs" id="sortTabs"></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" hidden></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+// ===== 여기만 고치면 돼요 =====
+// 일행 이름 (id는 바꾸지 마세요. 이름 name만 바꿔도 돼요)
+const MEMBERS=[
+  {id:"mom",name:"엄마",c:"var(--m1)"},
+  {id:"bro",name:"오빠",c:"var(--m2)"},
+  {id:"me", name:"동생",c:"var(--m3)"},
+];
+// 장소 목록. img에 사진 주소를 넣으면 색 배경 대신 사진이 나와요 (예: img:"photos/takoyaki.jpg")
+const ITEMS=[
+  {id:1,city:"오사카",kind:"food",t:"타코야키",jp:"たこ焼き",d:"도톤보리 길거리에서 바로 구워 주는 문어 풀빵. 겉은 바삭, 속은 촉촉.",g:["#e7894a","#b5452a"]},
+  {id:2,city:"오사카",kind:"food",t:"오코노미야키",jp:"お好み焼き",d:"철판 위에서 구워 먹는 오사카식 부침개. 소스와 가쓰오부시가 포인트.",g:["#c9733d","#7c3b22"]},
+  {id:3,city:"오사카",kind:"food",t:"쿠시카츠",jp:"串カツ",d:"신세카이 골목의 꼬치 튀김. 소스는 한 번만 찍기가 규칙.",g:["#d6a13c","#8b5a1f"]},
+  {id:4,city:"오사카",kind:"food",t:"551 호라이 부타망",jp:"豚まん",d:"줄 서서 사는 오사카 명물 고기 찐빵. 역 안에서도 살 수 있어요.",g:["#e3c59a","#a8794a"]},
+  {id:5,city:"오사카",kind:"see",t:"도톤보리 글리코 간판",jp:"道頓堀",d:"오사카 하면 떠오르는 그 네온사인. 밤에 가야 제맛.",g:["#3a3fa8","#d43f6b"]},
+  {id:6,city:"오사카",kind:"see",t:"오사카성",jp:"大阪城",d:"넓은 공원 안의 천수각. 전망대에서 시내가 한눈에 보여요.",g:["#3f7d5a","#20473a"]},
+  {id:7,city:"오사카",kind:"see",t:"유니버설 스튜디오 재팬",jp:"USJ",d:"닌텐도 월드, 해리포터 구역. 하루를 통째로 써야 하는 곳.",g:["#2f6fd1","#1c2f7a"]},
+  {id:8,city:"오사카",kind:"see",t:"우메다 공중정원",jp:"空中庭園",d:"173m 높이 옥상 전망대. 해 질 녘 야경 추천.",g:["#6c5fb5","#24234f"]},
+  {id:9,city:"교토",kind:"food",t:"니시키 시장 먹거리",jp:"錦市場",d:"'교토의 부엌'이라 불리는 400m 시장 골목. 꼬치, 두유 도넛, 절임 반찬.",g:["#d9802e","#8a3f1c"]},
+  {id:10,city:"교토",kind:"food",t:"우지 말차 디저트",jp:"抹茶パフェ",d:"진한 말차 파르페와 소프트아이스크림. 우지 본점까지 가면 더 좋아요.",g:["#7aa65a","#3c5f2c"]},
+  {id:11,city:"교토",kind:"food",t:"유도후",jp:"湯豆腐",d:"따끈한 다시마 육수에 데운 두부 요리. 난젠지 근처가 유명해요.",g:["#cfc6b4","#7d7362"]},
+  {id:12,city:"교토",kind:"food",t:"니신소바",jp:"にしんそば",d:"달게 조린 청어를 얹은 교토식 메밀국수.",g:["#9a7b5a","#4f3a28"]},
+  {id:13,city:"교토",kind:"see",t:"후시미 이나리 신사",jp:"伏見稲荷",d:"끝없이 이어지는 주황색 도리이 길. 아침 일찍 가면 한산해요.",g:["#e2572b","#8c2412"]},
+  {id:14,city:"교토",kind:"see",t:"기요미즈데라",jp:"清水寺",d:"절벽 위 나무 무대에서 내려다보는 교토 풍경. 산넨자카 골목과 함께.",g:["#c0573f","#5b2c2a"]},
+  {id:15,city:"교토",kind:"see",t:"아라시야마 대나무숲",jp:"竹林の小径",d:"하늘을 덮은 대나무 사이 산책길. 도게츠교 다리까지 이어서.",g:["#4f9a6a","#1d4a33"]},
+  {id:16,city:"교토",kind:"see",t:"금각사",jp:"金閣寺",d:"연못에 비치는 금빛 누각. 맑은 날 사진이 특히 예뻐요.",g:["#d8b03a","#7a5a14"]},
+];
+// 저장소(Supabase) 연결 정보
+const SUPABASE_URL="https://cvyxasoulaxrwjsirojj.supabase.co";
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2eXhhc291bGF4cndqc2lyb2pqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MzEzNzMsImV4cCI6MjA5NTAwNzM3M30.8p_qiqHS9EYguXZ34IiTOzyc1qA4FBTmaLJMdkq-IAY";
+// ==============================
+
+const KIND={food:"먹을 것",see:"볼 것"};
+const picks=new Map(ITEMS.map(i=>[i.id,new Set()]));
+let me=null, fKind="all", fCity="all", sort="pop", openId=null, ready=false;
+try{const s=localStorage.getItem("kansai-me"); if(MEMBERS.some(m=>m.id===s)) me=s;}catch(e){}
+
+const $=s=>document.querySelector(s);
+const mem=id=>MEMBERS.find(m=>m.id===id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const av=m=>`<span class="av" style="--c:${m.c}" title="${esc(m.name)}">${esc(m.name[0])}</span>`;
+const heartSvg=f=>`<svg viewBox="0 0 24 24" fill="${f?"currentColor":"none"}" stroke="currentColor" stroke-width="2"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4h2c.7-1.2 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg>`;
+const photo=(i,extra="")=>`<div class="photo ${i.img?"has-img":""}" style="--g1:${i.g[0]};--g2:${i.g[1]};${i.img?`background-image:url('${i.img}')`:""}"><span class="jp">${i.jp}</span>${extra}</div>`;
+const who=id=>MEMBERS.filter(m=>picks.get(id).has(m.id));
+
+let toastTimer;
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.hidden=true,3000);}
+function status(cls,msg){const s=$("#status");s.className="status "+cls;s.lastElementChild.textContent=msg;}
+
+// ----- 저장소 -----
+const db=(window.supabase&&!SUPABASE_URL.startsWith("__"))?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+async function load(){
+  if(!db){status("err","저장소에 연결되지 않았어요");return;}
+  const {data,error}=await db.from("wishes").select("item_id,member");
+  if(error){status("err","불러오지 못했어요. 새로고침해 주세요");return;}
+  picks.forEach(s=>s.clear());
+  data.forEach(r=>picks.get(r.item_id)?.add(r.member));
+  ready=true; status("ok","모두의 선택이 실시간으로 보여요");
+  render(); if(openId) openSheet(openId);
+}
+async function toggle(id){
+  if(!me){askWho();return;}
+  if(!ready){toast("아직 불러오는 중이에요. 잠시 후 다시 눌러 주세요");return;}
+  const set=picks.get(id), had=set.has(me);
+  had?set.delete(me):set.add(me);
+  render(); if(openId===id) openSheet(id);
+  const {error}=had
+    ? await db.from("wishes").delete().eq("item_id",id).eq("member",me)
+    : await db.from("wishes").upsert({item_id:id,member:me});
+  if(error){had?set.add(me):set.delete(me);render();if(openId===id)openSheet(id);toast("저장하지 못했어요. 인터넷 연결을 확인해 주세요");}
+}
+if(db){
+  load();
+  db.channel("wishes").on("postgres_changes",{event:"*",schema:"public",table:"wishes"},()=>load()).subscribe();
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)load();});
+  setInterval(()=>{if(!document.hidden)load();},30000);
+}else status("err","저장소에 연결되지 않았어요");
+
+// ----- 화면 -----
+function tabs(el,opts,cur,set){
+  el.innerHTML=opts.map(([v,l])=>`<button class="tab" aria-pressed="${v===cur}" data-v="${v}">${l}</button>`).join("");
+  el.onclick=e=>{const b=e.target.closest(".tab");if(b){set(b.dataset.v);render();}};
+}
+function render(){
+  const m=me&&mem(me);
+  document.documentElement.style.setProperty("--me",m?m.c:"var(--ai)");
+  $("#members").innerHTML=MEMBERS.map(x=>`<button class="member" style="--c:${x.c}" aria-pressed="${x.id===me}" data-id="${x.id}">${av(x)}${esc(x.name)}</button>`).join("");
+  tabs($("#kindTabs"),[["all","전체"],["food","먹을 것"],["see","볼 것"]],fKind,v=>fKind=v);
+  tabs($("#cityTabs"),[["all","전체 도시"],["오사카","오사카"],["교토","교토"]],fCity,v=>fCity=v);
+  tabs($("#sortTabs"),[["pop","인기순"],["all3","모두 찜"],["mine","내가 고른 것"]],sort,v=>sort=v);
+
+  let list=ITEMS.filter(i=>(fKind==="all"||i.kind===fKind)&&(fCity==="all"||i.city===fCity));
+  if(sort==="mine") list=list.filter(i=>picks.get(i.id).has(me));
+  else if(sort==="all3") list=list.filter(i=>picks.get(i.id).size===MEMBERS.length);
+  else list=[...list].sort((a,b)=>picks.get(b.id).size-picks.get(a.id).size||a.id-b.id);
+  const myN=me?ITEMS.filter(i=>picks.get(i.id).has(me)).length:0;
+  $("#count").textContent=`${list.length}곳`+(m?` · ${m.name}님이 고른 곳 ${myN}개`:"");
+
+  $("#grid").innerHTML=list.length?list.map(i=>{
+    const ps=who(i.id), mine=picks.get(i.id).has(me), all=ps.length===MEMBERS.length;
+    return `<div class="card ${mine?"mine":""}" role="button" tabindex="0" data-id="${i.id}" aria-label="${i.t} 상세 보기">
+      ${photo(i,`<span class="kind">${KIND[i.kind]}</span>${all?`<span class="hot">모두 찜</span>`:""}
+        <button class="heart" data-heart="${i.id}" aria-label="${mine?"찜 취소":"찜하기"}">${heartSvg(mine)}</button>`)}
+      <div class="body">
+        <span class="city">${i.city}</span>
+        <span class="title">${i.t}</span>
+        <span class="desc">${i.d}</span>
+        <div class="pickers">
+          <div class="stack">${ps.map(av).join("")}</div>
+          <span class="n ${ps.length?"":"zero"}">${ps.length?`${ps.length}명`:"아직 아무도 안 골랐어요"}</span>
+        </div>
+      </div></div>`;}).join("")
+    :`<p class="empty">${sort==="mine"?"아직 고른 곳이 없어요. 카드의 하트를 눌러 보세요.":sort==="all3"?"아직 셋 다 고른 곳이 없어요.":"해당하는 곳이 없어요."}</p>`;
+}
+function showSheet(html){$("#sheet").innerHTML=html;$("#sheet").hidden=false;$("#scrim").hidden=false;}
+function openSheet(id){
+  openId=id; const i=ITEMS.find(x=>x.id===id), mine=picks.get(id).has(me), ps=who(id);
+  showSheet(`
+    ${photo(i,`<button class="close" data-close aria-label="닫기">✕</button>`)}
+    <div class="inner">
+      <span class="city">${i.city} · ${KIND[i.kind]}</span>
+      <h2>${i.t}</h2>
+      <p>${i.d}</p>
+      <h3>누가 골랐나요? (${ps.length}/${MEMBERS.length})</h3>
+      <div class="plist">${MEMBERS.map(m=>{const on=picks.get(id).has(m.id);
+        return `<div class="prow ${on?"":"off"}">${av(m)}<span>${esc(m.name)}${m.id===me?" (나)":""}</span><span class="st">${on?"가고 싶어요":"아직"}</span></div>`}).join("")}</div>
+      <div class="actions">
+        <button class="btn primary" data-toggle="${id}">${mine?"찜 취소하기":"나도 가고 싶어요"}</button>
+        <button class="btn ghost" data-close>닫기</button>
+      </div>
+    </div>`);
+}
+function askWho(){
+  openId=null;
+  showSheet(`<div class="inner"><h2>누구세요?</h2><p>한 번만 고르면 이 폰에서는 기억해 둘게요.</p>
+    <div class="ask">${MEMBERS.map(x=>`<button class="member" style="--c:${x.c}" data-pick="${x.id}">${av(x)}${esc(x.name)}</button>`).join("")}</div></div>`);
+}
+function setMe(id){me=id;try{localStorage.setItem("kansai-me",id);}catch(e){}render();}
+function closeSheet(){openId=null;$("#sheet").hidden=true;$("#scrim").hidden=true;}
+
+$("#scrim").onclick=closeSheet;
+$("#sheet").onclick=e=>{
+  const p=e.target.closest("[data-pick]"); if(p){setMe(p.dataset.pick);closeSheet();return;}
+  const t=e.target.closest("[data-toggle]"); if(t){toggle(+t.dataset.toggle);return;}
+  if(e.target.closest("[data-close]")) closeSheet();
+};
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape") closeSheet();
+  if((e.key==="Enter"||e.key===" ")&&e.target.classList?.contains("card")){e.preventDefault();openSheet(+e.target.dataset.id);}
+});
+$("#members").onclick=e=>{const b=e.target.closest(".member");if(b){setMe(b.dataset.id);if(openId)openSheet(openId);}};
+$("#grid").onclick=e=>{
+  const h=e.target.closest("[data-heart]"); if(h){e.stopPropagation();toggle(+h.dataset.heart);return;}
+  const c=e.target.closest(".card"); if(c) openSheet(+c.dataset.id);
+};
+render();
+if(!me) askWho();
+</script>
+</body>
+</html>
