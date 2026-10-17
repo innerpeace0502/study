@@ -6,7 +6,7 @@
 <title>간사이 위시보드</title>
 <meta name="description" content="엄마, 오빠, 동생의 오사카·교토 여행 위시리스트">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gothic+A1:wght@400;600;800&family=Zen+Maru+Gothic:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gothic+A1:wght@400;600;800&display=swap">
 <style>
 /* 상단 '나는 누구' → 필터 → 카드 그리드(폰 2열) → 카드를 누르면 하단 시트로 상세 */
 :root{
@@ -15,7 +15,6 @@
   --m1:#e0567a; --m2:#2f8f83; --m3:#6a5acd;
   --f-display:"Do Hyeon","Gothic A1",system-ui,sans-serif;
   --f-body:"Gothic A1",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-  --f-jp:"Zen Maru Gothic","Hiragino Maru Gothic ProN",sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root{
@@ -31,7 +30,6 @@ img{max-width:100%}
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
 header h1{font-family:var(--f-display);font-weight:400;font-size:clamp(28px,6vw,40px);line-height:1.1;margin:0 0 4px;text-wrap:balance}
-header h1 .jp{font-family:var(--f-jp);color:var(--shu);font-size:.55em;margin-left:6px;vertical-align:middle}
 header p{margin:0;color:var(--muted)}
 .status{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-top:6px}
 .status i{width:8px;height:8px;border-radius:50%;background:#aaa}
@@ -62,9 +60,8 @@ button:focus-visible,.card:focus-visible{outline:3px solid var(--ai);outline-off
 @media (hover:hover){.card:hover{transform:translateY(-2px)}}
 .card.mine{border-color:var(--me);box-shadow:0 0 0 1px var(--me)}
 .photo{aspect-ratio:4/3;max-width:100%;display:grid;place-items:center;position:relative;color:#fff;
-  background:linear-gradient(135deg,var(--g1),var(--g2)) center/cover}
-.photo.has-img .jp{display:none}
-.photo .jp{font-family:var(--f-jp);font-size:clamp(20px,5vw,28px);text-shadow:0 1px 8px rgba(0,0,0,.25);padding:0 10px;text-align:center}
+  background:var(--img,none) center/cover no-repeat,linear-gradient(135deg,var(--g1),var(--g2))}
+.credit{margin-top:28px;font-size:11px;color:var(--muted)}
 .kind{position:absolute;top:8px;left:8px;font-size:11px;font-weight:800;background:rgba(0,0,0,.4);color:#fff;border-radius:6px;padding:2px 7px}
 .hot{position:absolute;bottom:8px;left:8px;font-size:11px;font-weight:800;background:var(--shu);color:#fff;border-radius:6px;padding:2px 7px}
 .heart{position:absolute;top:6px;right:6px;width:38px;height:38px;border-radius:50%;border:0;cursor:pointer;
@@ -113,7 +110,7 @@ button:focus-visible,.card:focus-visible{outline:3px solid var(--ai);outline-off
 <body>
 <div class="wrap">
   <header>
-    <h1>오사카·교토 위시보드<span class="jp">行きたい！</span></h1>
+    <h1>오사카·교토 위시보드</h1>
     <p>가고 싶은 곳, 먹고 싶은 것에 하트를 눌러 주세요. 카드를 누르면 누가 골랐는지 보여요.</p>
     <span class="status" id="status"><i></i><span>불러오는 중…</span></span>
   </header>
@@ -133,6 +130,7 @@ button:focus-visible,.card:focus-visible{outline:3px solid var(--ai);outline-off
   </div>
 
   <div class="grid" id="grid"></div>
+  <p class="credit">사진: 위키백과(Wikipedia) 문서 대표 이미지</p>
 </div>
 
 <div class="scrim" id="scrim" hidden></div>
@@ -148,28 +146,29 @@ const MEMBERS=[
   {id:"bro",name:"오빠",c:"var(--m2)"},
   {id:"me", name:"동생",c:"var(--m3)"},
 ];
-// 장소 목록. img에 사진 주소를 넣으면 색 배경 대신 사진이 나와요 (예: img:"photos/takoyaki.jpg")
+// 장소 목록. 사진은 wiki에 적힌 위키백과 문서의 대표 사진을 자동으로 가져와요.
+// 직접 고른 사진을 쓰려면 img:"사진주소" 를 넣어 주세요.
 const ITEMS=[
-  {id:1,city:"오사카",kind:"food",t:"타코야키",jp:"たこ焼き",d:"도톤보리 길거리에서 바로 구워 주는 문어 풀빵. 겉은 바삭, 속은 촉촉.",g:["#e7894a","#b5452a"]},
-  {id:2,city:"오사카",kind:"food",t:"오코노미야키",jp:"お好み焼き",d:"철판 위에서 구워 먹는 오사카식 부침개. 소스와 가쓰오부시가 포인트.",g:["#c9733d","#7c3b22"]},
-  {id:3,city:"오사카",kind:"food",t:"쿠시카츠",jp:"串カツ",d:"신세카이 골목의 꼬치 튀김. 소스는 한 번만 찍기가 규칙.",g:["#d6a13c","#8b5a1f"]},
-  {id:4,city:"오사카",kind:"food",t:"551 호라이 부타망",jp:"豚まん",d:"줄 서서 사는 오사카 명물 고기 찐빵. 역 안에서도 살 수 있어요.",g:["#e3c59a","#a8794a"]},
-  {id:5,city:"오사카",kind:"see",t:"도톤보리 글리코 간판",jp:"道頓堀",d:"오사카 하면 떠오르는 그 네온사인. 밤에 가야 제맛.",g:["#3a3fa8","#d43f6b"]},
-  {id:6,city:"오사카",kind:"see",t:"오사카성",jp:"大阪城",d:"넓은 공원 안의 천수각. 전망대에서 시내가 한눈에 보여요.",g:["#3f7d5a","#20473a"]},
-  {id:8,city:"오사카",kind:"see",t:"우메다 공중정원",jp:"空中庭園",d:"173m 높이 옥상 전망대. 해 질 녘 야경 추천.",g:["#6c5fb5","#24234f"]},
-  {id:9,city:"교토",kind:"food",t:"니시키 시장 먹거리",jp:"錦市場",d:"'교토의 부엌'이라 불리는 400m 시장 골목. 꼬치, 두유 도넛, 절임 반찬.",g:["#d9802e","#8a3f1c"]},
-  {id:10,city:"교토",kind:"food",t:"우지 말차 디저트",jp:"抹茶パフェ",d:"진한 말차 파르페와 소프트아이스크림. 우지 본점까지 가면 더 좋아요.",g:["#7aa65a","#3c5f2c"]},
-  {id:11,city:"교토",kind:"food",t:"유도후",jp:"湯豆腐",d:"따끈한 다시마 육수에 데운 두부 요리. 난젠지 근처가 유명해요.",g:["#cfc6b4","#7d7362"]},
-  {id:12,city:"교토",kind:"food",t:"니신소바",jp:"にしんそば",d:"달게 조린 청어를 얹은 교토식 메밀국수.",g:["#9a7b5a","#4f3a28"]},
-  {id:13,city:"교토",kind:"see",t:"후시미 이나리 신사",jp:"伏見稲荷",d:"끝없이 이어지는 주황색 도리이 길. 아침 일찍 가면 한산해요.",g:["#e2572b","#8c2412"]},
-  {id:14,city:"교토",kind:"see",t:"청수사 (기요미즈데라)",jp:"清水寺",d:"절벽 위 나무 무대에서 내려다보는 교토 풍경. 산넨자카·니넨자카 골목과 함께.",g:["#c0573f","#5b2c2a"]},
-  {id:15,city:"교토",kind:"see",t:"아라시야마 (천룡사·산속정원·대나무숲길)",jp:"嵐山",d:"세계유산 천룡사 정원을 보고, 대나무숲길을 지나 오코치 산소 산속 정원까지 이어지는 코스.",g:["#4f9a6a","#1d4a33"]},
-  {id:16,city:"교토",kind:"see",t:"금각사 / 은각사",jp:"金閣寺・銀閣寺",d:"연못에 비치는 금빛 누각 금각사, 소박한 정원과 '철학의 길'이 이어지는 은각사.",g:["#d8b03a","#7a5a14"]},
-  {id:17,city:"오사카",kind:"see",t:"도톤보리 크루즈",jp:"とんぼりリバークルーズ",d:"도톤보리 강을 따라 20분 정도 도는 유람선. 글리코 간판 아래를 배로 지나가요.",g:["#2b6cb0","#1a2f5c"]},
-  {id:18,city:"오사카",kind:"food",t:"미미우 우동스키",jp:"美々卯",d:"우동스키를 처음 만든 곳. 해산물과 채소, 굵은 우동을 냄비에 끓여 먹는 전골 요리.",g:["#c98f4e","#6e4423"]},
-  {id:19,city:"교토",kind:"food",t:"아라시야마 장어덮밥",jp:"うなぎ",d:"아라시야마 산책 후 먹는 숯불 장어덮밥. 인기 가게는 줄이 길어 일찍 가는 게 좋아요.",g:["#8a5a2b","#3b2412"]},
-  {id:20,city:"교토",kind:"see",t:"기온 거리",jp:"祇園",d:"옛 목조 찻집이 늘어선 하나미코지 거리. 저녁 무렵 등불이 켜질 때 걷기 좋아요.",g:["#9c3b3b","#3d1820"]},
-  {id:21,city:"교토",kind:"food",t:"교토 가이세키",jp:"京懐石",d:"제철 재료로 한 접시씩 나오는 교토식 코스 요리. 예약하고 가는 게 좋아요.",g:["#7d6a9e","#2f2645"]},
+  {id:1,city:"오사카",kind:"food",t:"타코야키",wiki:["Takoyaki"],d:"도톤보리 길거리에서 바로 구워 주는 문어 풀빵. 겉은 바삭, 속은 촉촉.",g:["#e7894a","#b5452a"]},
+  {id:2,city:"오사카",kind:"food",t:"오코노미야키",wiki:["Okonomiyaki"],d:"철판 위에서 구워 먹는 오사카식 부침개. 소스와 가쓰오부시가 포인트.",g:["#c9733d","#7c3b22"]},
+  {id:3,city:"오사카",kind:"food",t:"쿠시카츠",wiki:["Kushikatsu"],d:"신세카이 골목의 꼬치 튀김. 소스는 한 번만 찍기가 규칙.",g:["#d6a13c","#8b5a1f"]},
+  {id:4,city:"오사카",kind:"food",t:"551 호라이 부타망",wiki:["Butaman", "Nikuman", "Baozi"],d:"줄 서서 사는 오사카 명물 고기 찐빵. 역 안에서도 살 수 있어요.",g:["#e3c59a","#a8794a"]},
+  {id:5,city:"오사카",kind:"see",t:"도톤보리 글리코 간판",wiki:["Glico Man", "Glico Running Man", "Dōtonbori"],d:"오사카 하면 떠오르는 그 네온사인. 밤에 가야 제맛.",g:["#3a3fa8","#d43f6b"]},
+  {id:6,city:"오사카",kind:"see",t:"오사카성",wiki:["Osaka Castle"],d:"넓은 공원 안의 천수각. 전망대에서 시내가 한눈에 보여요.",g:["#3f7d5a","#20473a"]},
+  {id:8,city:"오사카",kind:"see",t:"우메다 공중정원",wiki:["Umeda Sky Building"],d:"173m 높이 옥상 전망대. 해 질 녘 야경 추천.",g:["#6c5fb5","#24234f"]},
+  {id:9,city:"교토",kind:"food",t:"니시키 시장 먹거리",wiki:["Nishiki Market"],d:"'교토의 부엌'이라 불리는 400m 시장 골목. 꼬치, 두유 도넛, 절임 반찬.",g:["#d9802e","#8a3f1c"]},
+  {id:10,city:"교토",kind:"food",t:"우지 말차 디저트",wiki:["Matcha ice cream", "Matcha"],d:"진한 말차 파르페와 소프트아이스크림. 우지 본점까지 가면 더 좋아요.",g:["#7aa65a","#3c5f2c"]},
+  {id:11,city:"교토",kind:"food",t:"유도후",wiki:["Yudofu", "Yudōfu", "Tofu"],d:"따끈한 다시마 육수에 데운 두부 요리. 난젠지 근처가 유명해요.",g:["#cfc6b4","#7d7362"]},
+  {id:12,city:"교토",kind:"food",t:"니신소바",wiki:["Nishin soba", "Soba"],d:"달게 조린 청어를 얹은 교토식 메밀국수.",g:["#9a7b5a","#4f3a28"]},
+  {id:13,city:"교토",kind:"see",t:"후시미 이나리 신사",wiki:["Fushimi Inari-taisha"],d:"끝없이 이어지는 주황색 도리이 길. 아침 일찍 가면 한산해요.",g:["#e2572b","#8c2412"]},
+  {id:14,city:"교토",kind:"see",t:"청수사 (기요미즈데라)",wiki:["Kiyomizu-dera"],d:"절벽 위 나무 무대에서 내려다보는 교토 풍경. 산넨자카·니넨자카 골목과 함께.",g:["#c0573f","#5b2c2a"]},
+  {id:15,city:"교토",kind:"see",t:"아라시야마 (천룡사·산속정원·대나무숲길)",wiki:["Tenryū-ji", "Arashiyama"],d:"세계유산 천룡사 정원을 보고, 대나무숲길을 지나 오코치 산소 산속 정원까지 이어지는 코스.",g:["#4f9a6a","#1d4a33"]},
+  {id:16,city:"교토",kind:"see",t:"금각사 / 은각사",wiki:["Kinkaku-ji", "Ginkaku-ji"],d:"연못에 비치는 금빛 누각 금각사, 소박한 정원과 '철학의 길'이 이어지는 은각사.",g:["#d8b03a","#7a5a14"]},
+  {id:17,city:"오사카",kind:"see",t:"도톤보리 크루즈",wiki:["Dōtonbori"],d:"도톤보리 강을 따라 20분 정도 도는 유람선. 글리코 간판 아래를 배로 지나가요.",g:["#2b6cb0","#1a2f5c"]},
+  {id:18,city:"오사카",kind:"food",t:"미미우 우동스키",wiki:["Udonsuki", "Udon-suki", "Nabemono", "Udon"],d:"우동스키를 처음 만든 곳. 해산물과 채소, 굵은 우동을 냄비에 끓여 먹는 전골 요리.",g:["#c98f4e","#6e4423"]},
+  {id:19,city:"교토",kind:"food",t:"아라시야마 장어덮밥",wiki:["Unadon", "Kabayaki", "Unagi"],d:"아라시야마 산책 후 먹는 숯불 장어덮밥. 인기 가게는 줄이 길어 일찍 가는 게 좋아요.",g:["#8a5a2b","#3b2412"]},
+  {id:20,city:"교토",kind:"see",t:"기온 거리",wiki:["Gion", "Hanamikōji Street"],d:"옛 목조 찻집이 늘어선 하나미코지 거리. 저녁 무렵 등불이 켜질 때 걷기 좋아요.",g:["#9c3b3b","#3d1820"]},
+  {id:21,city:"교토",kind:"food",t:"교토 가이세키",wiki:["Kaiseki"],d:"제철 재료로 한 접시씩 나오는 교토식 코스 요리. 예약하고 가는 게 좋아요.",g:["#7d6a9e","#2f2645"]},
 ];
 // 저장소(Supabase) 연결 정보
 const SUPABASE_URL="https://cvyxasoulaxrwjsirojj.supabase.co";
@@ -186,7 +185,7 @@ const mem=id=>MEMBERS.find(m=>m.id===id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const av=m=>`<span class="av" style="--c:${m.c}" title="${esc(m.name)}">${esc(m.name[0])}</span>`;
 const heartSvg=f=>`<svg viewBox="0 0 24 24" fill="${f?"currentColor":"none"}" stroke="currentColor" stroke-width="2"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4h2c.7-1.2 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg>`;
-const photo=(i,extra="")=>`<div class="photo ${i.img?"has-img":""}" style="--g1:${i.g[0]};--g2:${i.g[1]};${i.img?`background-image:url('${i.img}')`:""}"><span class="jp">${i.jp}</span>${extra}</div>`;
+const photo=(i,extra="")=>`<div class="photo" style="--g1:${i.g[0]};--g2:${i.g[1]};${i.img?`--img:url('${i.img.replace(/['()\\]/g,encodeURIComponent)}')`:""}">${extra}</div>`;
 const who=id=>MEMBERS.filter(m=>picks.get(id).has(m.id));
 
 let toastTimer;
@@ -301,6 +300,23 @@ $("#grid").onclick=e=>{
 };
 render();
 if(!me) askWho();
+// ----- 사진: 위키백과 대표 이미지 -----
+async function loadPhotos(){
+  const titles=[...new Set(ITEMS.filter(i=>!i.img).flatMap(i=>i.wiki||[]))];
+  if(!titles.length) return;
+  try{
+    const u="https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=640&titles="+encodeURIComponent(titles.join("|"));
+    const q=(await (await fetch(u)).json()).query||{};
+    const norm=Object.fromEntries((q.normalized||[]).map(x=>[x.from,x.to]));
+    const redir=Object.fromEntries((q.redirects||[]).map(x=>[x.from,x.to]));
+    const thumb=Object.fromEntries(Object.values(q.pages||{}).filter(p=>p.thumbnail).map(p=>[p.title,p.thumbnail.source]));
+    const find=t=>{t=norm[t]||t;t=redir[t]||t;return thumb[t];};
+    ITEMS.forEach(i=>{if(!i.img){for(const t of i.wiki||[]){const src=find(t);if(src){i.img=src;break;}}}});
+    render(); if(openId) openSheet(openId);
+  }catch(e){}
+}
+loadPhotos();
+
 </script>
 </body>
 </html>
